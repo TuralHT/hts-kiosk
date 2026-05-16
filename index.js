@@ -1,4 +1,4 @@
-const  app, BrowserWindow, globalShortcut, ipcMain, screen } = require('electron');
+const { app, BrowserWindow, globalShortcut, ipcMain, screen } = require('electron');
 const { exec, execFile } = require('child_process');
 const path = require('path');
 const os = require('os');
@@ -81,7 +81,7 @@ function createWindow() {
         y: 0,
         width: width,
         height: height,
-        kiosk: true, // Sizin o sabit, dondurmayan orijinal rejiminiz
+        kiosk: true, 
         fullscreen: true,
         frame: false,
         autoHideMenuBar: true,
@@ -91,17 +91,10 @@ function createWindow() {
         minimizable: false,
         maximizable: false,
         closable: false,
+        type: 'screen-saver',
         
-        // 🚀 ANYDESK-İ BLOKLAYAN 'screen-saver' SİLİNDİ! 
-        // Yerində standart 'window' qalır ki, AnyDesk maneəsiz önə gələ bilsin
-        type: 'window', 
-        
-        webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false,
-            webSecurity: false
-        }
-    });
+        // 🚀 TEST ÜÇÜN BU SƏTRİ ƏLAVƏ EDİN (PƏNCƏRƏNİ TAMAMİLƏ GİZLƏDİR):
+        show: false,
     
     // 🚀 AŞAĞI BOŞLUĞU 'screen-saver' OLMADAN DA 100% SİLƏN RƏSMİ ELECTRON ƏMRİ:
     mainWindow.maximize(); // Pəncərəni Windows rezerv zonalarını tapdalayaraq tam maksimizasiya edir
