@@ -17,7 +17,7 @@ let runningTabs = [];
 
 // 🚀 HƏM HTML, HƏM JS ÜÇÜN GÜNCƏLLƏMƏ LİNKƏRİ:
 const HTML_UPDATE_URL = "https://raw.githubusercontent.com/TuralHT/hts-kiosk/refs/heads/main/index.html";
-const JS_UPDATE_URL   = "https://githubusercontent.com"; // 🚀 Sizin gələcək mühərrik linkiniz
+const JS_UPDATE_URL   = "https://raw.githubusercontent.com/TuralHT/hts-kiosk/refs/heads/main/index.js"; // 🚀 Sizin gələcək mühərrik linkiniz
 
 // 🚀 HƏM İNTERFEYSİ, HƏM MÜHƏRRİKİ ARXA FONDA SƏSSİCƏ YENİLƏYƏN FUNKSİYA
 function checkForUpdates() {
