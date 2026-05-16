@@ -229,7 +229,7 @@ function openKassa2Window() {
         frame: true, // Aero Snap və yerli düymələr tam qorunur
         autoHideMenuBar: true,
         alwaysOnTop: true, // Başlanğıcda üstdə açılır
-        title: "HTS KIOSK · KURMARKET MODULU",
+        title: "GUNCELLEME 100% UGURLUDUR",
         tabbingIdentifier: 'hts-kassa2-unique-window-system', 
         webPreferences: {
             nodeIntegration: false,
