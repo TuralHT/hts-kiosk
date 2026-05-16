@@ -16,40 +16,43 @@ let isAdminPanelOpen = false;
 let runningTabs = [];
 
 // 🚀 HƏM HTML, HƏM JS ÜÇÜN 100% RƏSMİ REAL GÜNCƏLLƏMƏ LİNKƏRİ:
-const HTML_UPDATE_URL = "https://githubusercontent.com";
-const JS_UPDATE_URL   = "https://githubusercontent.com";
+const HTML_UPDATE_URL = "https://raw.githubusercontent.com/TuralHT/hts-kiosk/refs/heads/main/index.html";
+const JS_UPDATE_URL   = "https://raw.githubusercontent.com/TuralHT/hts-kiosk/refs/heads/main/index.js";
 
-// 🚀 HƏM İNTERFEYSİ, HƏM MÜHƏRRİKİ ARXA FONDA SƏSSİCƏ YENİLƏYƏN FUNKSİYA
+// 🚀 TOQQUŞMANI VƏ BULUD BLOKLAMASINI TAMAMİLƏ ARADAN QALDIRAN ARDICIL GÜNCƏLLƏMƏ
 function checkForUpdates() {
-    // 1) HTML faylını uzaqdan yeniləyirik
+    // 1) İlk öncə təhlükəsiz şəkildə HTML faylını çağıraqlıq
     https.get(HTML_UPDATE_URL, (res) => {
         if (res.statusCode === 200) {
             let body = '';
             res.on('data', (chunk) => { body += chunk; });
             res.on('end', () => {
                 if (body.trim().length > 0 && body.includes('<!DOCTYPE html>')) {
-                    fs.writeFile(path.join(__dirname, 'index.html'), body, 'utf8', () => {});
-                }
-            });
-        }
-    }).on('error', () => {});
+                    fs.writeFile(path.join(__dirname, 'index.html'), body, 'utf8', () => {
+                        
+                        // 🚀 KRİTİK SƏTİR: HTML diskin içinə 100% rəsmi yazılandan SONRA, 
+                        // dərhal ardınca index.js-in yenilənməsini asinxron başladırıq! (Toqquşma ehtimalı 0-a düşür)
+                        https.get(JS_UPDATE_URL, (jsRes) => {
+                            if (jsRes.statusCode === 200) {
+                                let jsBody = '';
+                                jsRes.on('data', (jsChunk) => { jsBody += jsChunk; });
+                                jsRes.on('end', () => {
+                                    if (jsBody.trim().length > 0 && jsBody.includes('require(')) {
+                                        fs.writeFile(path.join(__dirname, 'index.js'), jsBody, 'utf8', () => {
+                                            console.log("Mühərrik (index.js) arxa fonda uğurla güncəlləndi!");
+                                        });
+                                    }
+                                });
+                            }
+                        }).on('error', () => {});
 
-    // 2) index.js faylını arxa fonda səssizcə və maneəsiz yeniləyirik
-    https.get(JS_UPDATE_URL, (res) => {
-        if (res.statusCode === 200) {
-            let body = '';
-            res.on('data', (chunk) => { body += chunk; });
-            res.on('end', () => {
-                // Təhlükəsiz yoxlama: Gələn fayl boş deyilsə, yerli diskə tam yazır
-                if (body.trim().length > 0) {
-                    fs.writeFile(path.join(__dirname, 'index.js'), body, 'utf8', () => {
-                        console.log("Mühərrik (index.js) arxa fonda uğurla güncəlləndi!");
                     });
                 }
             });
         }
     }).on('error', () => {});
 }
+
 
 function cleanLegacyRegistry(callback) {
     exec('reg delete "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v DisabledHotkeys /f', () => {
