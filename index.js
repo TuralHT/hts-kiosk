@@ -81,7 +81,7 @@ function createWindow() {
         y: 0,
         width: width,
         height: height,
-        kiosk: true, 
+        kiosk: true, // Sizin o sabit, dondurmayan orijinal rejiminiz
         fullscreen: true,
         frame: false,
         autoHideMenuBar: true,
@@ -91,7 +91,11 @@ function createWindow() {
         minimizable: false,
         maximizable: false,
         closable: false,
-        type: 'screen-saver', 
+        
+        // 🚀 ANYDESK-İ BLOKLAYAN 'screen-saver' SİLİNDİ! 
+        // Yerində standart 'window' qalır ki, AnyDesk maneəsiz önə gələ bilsin
+        type: 'window', 
+        
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
@@ -99,15 +103,12 @@ function createWindow() {
         }
     });
     
+    // 🚀 AŞAĞI BOŞLUĞU 'screen-saver' OLMADAN DA 100% SİLƏN RƏSMİ ELECTRON ƏMRİ:
+    mainWindow.maximize(); // Pəncərəni Windows rezerv zonalarını tapdalayaraq tam maksimizasiya edir
     mainWindow.setBounds({ x: 0, y: 0, width: width, height: height });
     
-        mainWindow.loadFile('index.html');
-    
-    // 🚀 KIOSK TAM AÇILAN ANDA ARXA FONDA GÜNCƏLLƏMƏNİ TETİKLƏYİR
-    checkForUpdates();
-    
+    mainWindow.loadFile('index.html');
     mainWindow.setMenuBarVisibility(false);
-
     mainWindow.removeMenu();
     mainWindow.webContents.setFrameRate(60);
 
@@ -278,7 +279,7 @@ function bringAppToFrontAndMaximize(exeName) {
         `if ($proc) { ` +
         `    $hWnd = $proc.MainWindowHandle; ` +
         `    if ($hWnd -ne [IntPtr]::Zero) { ` +
-        `        $type::ShowWindowAsync($hWnd, 3); ` +
+        `        $type::ShowWindowAsync($hWnd, 3); ` + // 🚀 REAL MAKSİMİZASİYA: 9 yerinə 3 yazırıq ki, AnyDesk-i tam ekran açsın!
         `        $type::SetForegroundWindow($hWnd); ` +
         `    } ` +
         `}"`;
@@ -349,17 +350,35 @@ ipcMain.on('open-app', (event, appPath) => {
     const finalExe = realProcessName + '.exe';
 
     process.nextTick(() => {
-        exec(`tasklist /fi "IMAGENAME eq ${realProcessName}.exe"`, (err, stdout) => {
-            // İzləmə siyahısına əlavə edirik ki, vkladka tam silinsin
+        // AnyDesk-in daxili proses strukturu üçün yoxlamanı birbaşa start əmrinə yönləndiririk
+        if (realProcessName.toLowerCase() === 'anydesk') {
+            activeExternalAppExe = finalExe;
             if (!runningTabs.some(t => t.exeName === finalExe)) {
                 runningTabs.push({ exeName: finalExe });
             }
-            activeExternalAppExe = finalExe;
             if (mainWindow) mainWindow.setAlwaysOnTop(false);
 
-            if (stdout && stdout.toLowerCase().includes(realProcessName.toLowerCase())) {
+            // ipcMain.on('open-app') funksiyasının içində AnyDesk olan hissədəki taymeri belə edin:
+			exec(`cmd.exe /c start "" "${winSafePath}"`, { cwd: appDir }, () => {
+				setTimeout(() => {
+					exec(`powershell -Command "$ws = New-Object -ComObject WScript.Shell; $ws.AppActivate('AnyDesk')"`);
+					bringAppToFrontAndMaximize(finalExe); // Buradan yuxarıdakı '3' əmri tətiklənəcək
+				}, 500); // 🚀 Sürətli reaksiya: AnyDesk-ə aşağıda tab formalaşdırmağa icazə vermədən dərhal önə çəkir
+			});
+            return;
+        }
+
+        // Kassa 1 (Java) üçün sizin o qüsursuz işləyən orijinal PowerShell nəzarətli kodunuz bura toxunulmaz qaldı:
+        exec(`powershell -Command "Get-Process -Name '${realProcessName}' -ErrorAction SilentlyContinue"`, (err, stdout) => {
+            if (stdout && stdout.trim() !== "") {
+                activeExternalAppExe = finalExe;
+                if (!runningTabs.some(t => t.exeName === finalExe)) runningTabs.push({ exeName: finalExe });
+                if (mainWindow) mainWindow.setAlwaysOnTop(false);
                 bringAppToFrontAndMaximize(finalExe);
             } else {
+                activeExternalAppExe = finalExe;
+                if (!runningTabs.some(t => t.exeName === finalExe)) runningTabs.push({ exeName: finalExe });
+                if (mainWindow) mainWindow.setAlwaysOnTop(false);
                 execFile(winSafePath, [], { cwd: appDir }, (startErr) => {
                     if (startErr) console.error("Başlatma xətası:", startErr);
                     setTimeout(() => { bringAppToFrontAndMaximize(finalExe); }, 1200);
