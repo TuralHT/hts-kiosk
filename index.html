@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <title>HTS Kiosk</title>
+    <style>
+        /* 🚀 GOOGLE FONTS INTEGRASIYASINI SABITLEDIK */
+        @import url('https://googleapis.com');
+        
+        :root {
+            --bg-deep: #0a0e1a;
+            --accent1: #00c8ff;
+            --accent2: #0066ff;
+            --accent3: #00ffcc;
+            --text: #e0f0ff;
+            --text-dim: #7aa0c0;
+            --card-bg: rgba(0, 100, 200, 0.08);
+            --card-border: rgba(0, 200, 255, 0.2);
+            --glow: 0 0 20px rgba(0, 200, 255, 0.3);
+        }
+
+        /* 🚀 BOŞLUĞU SİLƏN REAL BAZA SIFIRLAMASI */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        html, body { 
+            width: 100vw !important; 
+            height: 100vh !important; 
+            margin: 0 !important; 
+            padding: 0 !important; 
+            overflow: hidden !important; 
+            background: var(--bg-deep); 
+            color: var(--text); 
+            font-family: 'Exo 2', sans-serif; 
+            user-select: none; 
+            cursor: default; 
+        }
+
+        .bg-grid { position: fixed; inset: 0; background-size: 60px 60px; background-image: linear-gradient(rgba(0,200,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,200,255,0.03) 1px, transparent 1px); }
+        .corner { position: fixed; width: 60px; height: 60px; opacity: 0.4; }
+        .corner-tl { top: 20px; left: 20px; border-top: 2px solid var(--accent1); border-left: 2px solid var(--accent1); }
+        .corner-tr { top: 20px; right: 20px; border-top: 2px solid var(--accent1); border-right: 2px solid var(--accent1); }
+        
+        /* 🚀 GÖVDƏNİ YUXARI SIKAN KÜNC BOŞLUQLARINI TAM SIFIRLADIK */
+        /* 🚀 KÜNC BƏZƏKLƏRİNİ MONITORUN REALLIĞINA YAXINLAŞDIRDIQ */
+		.corner-bl { 
+			bottom: 0px !important; /* Əvvəl 46px idi və bütün gövdəni yuxarı sıxırdı. İndi sıfırlandı */
+			left: 20px; 
+			border-bottom: 2px solid var(--accent1); 
+			border-left: 2px solid var(--accent1); 
+		}
+		
+		.corner-br { 
+			bottom: 0px !important; /* Əvvəl 46px idi və bütün gövdəni yuxarı sıxırdı. İndi sıfırlandı */
+			right: 20px; 
+			border-bottom: 2px solid var(--accent1); 
+			border-right: 2px solid var(--accent1); 
+		}
+		
+		/* 🚀 GÖVDƏNİ ƏVVƏLKİ ORİJİNAL VƏ SABİT HALINA QAYTARDIQ (KARTLAR QARIŞMIR) */
+		.container { 
+			position: relative; 
+			z-index: 10; 
+			height: 100vh !important; 
+			display: flex; 
+			flex-direction: column; 
+			align-items: center; 
+			justify-content: center; /* Yenidən mərkəzə qaytardıq, kartlar öz ideal yerinə oturdu */
+			gap: 3vh; 
+			padding: 20px; 
+			padding-bottom: 0px !important; 
+		}
+		
+		/* 🚀 LOQONUN YUXARI-AŞAĞI YERİNİ BURADAN SƏRBƏST IDARƏ EDİN */
+		.logo-ring {
+			position: relative;
+			width: 170px;
+			height: 170px;
+			
+			/* 👇 BURADAKI RƏQƏMİ DƏYİŞƏRƏK LOQONU YUXARI-AŞAĞI ÇƏKİN 👇 */
+			margin: -60px auto 20px; /* -60px loqonu kartlara toxunmadan yuxarı qaldırır */
+		}
+		
+		
+		/* 🚀 HƏZİN AXAN, HEÇ VAXT DAYANMAYAN YUMŞAQ LED EFFEKTLİ DAXİLİ BLOK */
+		.logo-inner {
+			position: absolute;
+			inset: 16px;
+			border-radius: 50%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-family: 'Orbitron', monospace;
+			font-weight: 900;
+			font-size: 36px;
+			color: #fff;
+			
+			/* 🚀 Bizim təməl rəng ahəngimiz (Neon Göy və Firuzəyi zolaq) */
+			background: linear-gradient(135deg, #0055ff, #00ffcc, #ff00ff, #0055ff);
+			background-size: 400% 400%; /* Rəng zolağını genişləndiririk ki, sürüşmə super yumşaq olsun */
+			
+			/* 🚀 LED animasiyasını həm arxa fona, həm də ətrafa yayılan neon parıltısına eyni anda bağlayırıq */
+			animation: HaisLedFlow 10s infinite ease-in-out, HtsNeonPulse 3s infinite ease-in-out;
+		}
+		
+		/* 🚀 RƏNGLƏRİ SU KİMİ DAYANMADAN AXIDAN LED ANİMASİYASI */
+		@keyframes HaisLedFlow {
+			0% { background-position: 0% 50%; }
+			50% { background-position: 100% 50%; }
+			100% { background-position: 0% 50%; }
+		}
+		
+		/* 🚀 ƏTRAFA YAYILAN NEON KÖLGƏSİNİN HƏZİN YANIB-SÖNMƏSİ (PULSE EFFEKTİ) */
+		@keyframes HtsNeonPulse {
+			0% { box-shadow: 0 0 25px rgba(0, 200, 255, 0.4); }
+			50% { box-shadow: 0 0 45px rgba(0, 255, 204, 0.7); }
+			100% { box-shadow: 0 0 25px rgba(0, 200, 255, 0.4); }
+		}
+		
+		
+        .company-name { font-family: 'Orbitron', monospace; font-size: calc(16px + 1.2vw); font-weight: 900; letter-spacing: 4px; background: linear-gradient(90deg, var(--accent1), var(--accent3), var(--accent1)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 15px; text-align: center; }
+        .divider { width: 30vw; min-width: 200px; height: 1px; background: linear-gradient(90deg, transparent, var(--accent1), transparent); }
+        .apps-label { font-family: 'Orbitron', monospace; font-size: 14px; letter-spacing: 4px; color: var(--accent1); text-shadow: 0 0 10px rgba(0,200,255,0.3); }
+        .apps-grid { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; max-width: 95vw; }
+
+        .app-card { position: relative; width: calc(120px + 3vw); background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 24px 16px; text-align: center; cursor: pointer; transition: all 0.3s ease; }
+        .app-card:hover { border-color: var(--accent1); transform: translateY(-5px); box-shadow: var(--glow); }
+        .app-icon { width: 64px; height: 64px; margin: 0 auto 12px; }
+        .app-icon img { width: 100%; height: 100%; object-fit: contain; }
+        .app-name { font-size: 13px; font-weight: 600; color: var(--text); }
+        .app-desc { font-size: 10px; color: var(--text-dim); margin-top: 4px; }
+
+        /* 🚀 TASKBAR GÖVDƏNİ SIKMASIN DEYƏ TAM MÜSTƏQİL SABİTLƏNDİ */
+        .kiosk-taskbar { position: fixed; bottom: 0 !important; left: 0; right: 0; height: 46px; background: #060a16; border-top: 1px solid rgba(0,200,255,0.2); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; z-index: 10000; }
+        .taskbar-left { display: flex; align-items: center; gap: 20px; }
+        .taskbar-apps { display: flex; align-items: center; gap: 10px; }
+        
+        .taskbar-tab { padding: 6px 16px; background: rgba(0,200,255,0.1); border: 1px solid var(--card-border); border-radius: 6px; font-size: 11px; font-weight: 600; color: #fff; cursor: pointer; display: none; align-items: center; gap: 10px; animation: fadeIn 0.3s; }
+        .taskbar-tab:hover { background: rgba(0,200,255,0.2); border-color: var(--accent1); }
+        .tab-close-btn { color: #ff4466 !important; font-weight: bold; font-size: 13px; cursor: pointer; padding: 2px 6px; border-radius: 4px; }
+        .tab-close-btn:hover { background: rgba(255, 68, 102, 0.2); }
+        .status-dot { display: inline-block; width: 6px; height: 6px; background: var(--accent3); border-radius: 50%; }
+        
+        .taskbar-right { display: flex; align-items: center; gap: 25px; }
+        .taskbar-branding { font-size: 11px; color: var(--text-dim); font-family: monospace; letter-spacing: 1px; }
+        #statusDate { font-family: 'Exo 2', sans-serif; font-size: 13px; font-weight: 600; color: var(--accent1); letter-spacing: 1px; text-transform: uppercase; }
+
+        .admin-overlay { display: none; position: fixed; inset: 0; background: rgba(0,5,15,0.95); z-index: 11000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+        .admin-overlay.show { display: flex; }
+        .admin-box { background: rgba(10,20,50,0.95); border: 1px solid var(--accent1); border-radius: 20px; padding: 40px; width: 360px; text-align: center; box-shadow: 0 0 60px rgba(0,200,255,0.2); }
+        .admin-input { width: 100%; background: rgba(0,50,100,0.3); border: 1px solid rgba(0,200,255,0.3); border-radius: 10px; padding: 14px 18px; color: var(--text); font-family: 'Orbitron', monospace; font-size: 16px; letter-spacing: 6px; text-align: center; outline: none; margin-bottom: 20px; }
+        .admin-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--accent2), var(--accent1)); border: none; border-radius: 10px; color: #fff; font-family: 'Orbitron', monospace; font-size: 13px; letter-spacing: 3px; cursor: pointer; margin-bottom: 12px; }
+        .admin-cancel { font-size: 11px; color: var(--text-dim); cursor: pointer; letter-spacing: 2px; }
+        .admin-error-msg { font-size: 11px; color: #ff4466; margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div><div class="corner corner-br"></div>
+
+    <div class="container">
+        <div class="header">
+            <div class="logo-ring"><div class="logo-inner">HTS</div></div>
+            <div class="company-name">KASSA İDARƏETMƏ SİSTEMİ</div>
+        </div>
+        <div class="divider"></div>
+        <div class="apps-label">PROQRAMLAR</div>
+        
+        <div class="apps-grid">
+            <div class="app-card" onclick="launchKioskApp('C:/Program Files/AzLiKe Online Sales/AzLiKe Online Sales.exe', 'Kassa 1')">
+                <div class="app-icon"><img src="images/kassa1.png"></div>
+                <div class="app-name">Kassa 1</div><div class="app-desc">AzLiKe Online Sales</div>
+            </div>
+            <div class="app-card" onclick="launchKioskApp('Kassa 2', 'Kassa 2')">
+                <div class="app-icon"><img src="images/kassa2.png"></div>
+                <div class="app-name">Kassa 2</div><div class="app-desc">Kurmarket Modulu</div>
+            </div>
+            <div class="app-card" onclick="launchKioskApp('C:/Program Files (x86)/AnyDesk/AnyDesk.exe', 'AnyDesk')">
+                <div class="app-icon"><img src="images/anydesk.png"></div>
+                <div class="app-name">AnyDesk</div><div class="app-desc">Uzaqdan idarəetmə</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="kiosk-taskbar">
+        <div class="taskbar-left">
+            <div style="font-weight: 600; font-size: 12px; display: flex; align-items: center; gap: 6px; letter-spacing: 1px;">
+                <span class="status-dot"></span> SİSTEM
+            </div>
+            <div class="taskbar-apps">
+                <div id="tabKassa1" class="taskbar-tab" onclick="recallApp('C:/Program Files/AzLiKe Online Sales/AzLiKe Online Sales.exe')">🛒 Kassa 1 <span class="tab-close-btn" onclick="closeAppFromTab(event, 'Kassa 1')">✕</span></div>
+                <div id="tabKassa2" class="taskbar-tab" onclick="recallApp('Kassa 2')">🌐 Kassa 2 <span class="tab-close-btn" onclick="closeAppFromTab(event, 'Kassa 2')">✕</span></div>
+                <div id="tabAnyDesk" class="taskbar-tab" onclick="recallApp('C:/Program Files (x86)/AnyDesk/AnyDesk.exe')">🖥️ AnyDesk <span class="tab-close-btn" onclick="closeAppFromTab(event, 'AnyDesk')">✕</span></div>
+            </div>
+        </div>
+        
+        <div class="taskbar-right">
+            <div class="taskbar-branding">HT-SOLUTION © 2026 | HTS v1.0</div>
+            <div id="statusDate"></div>
+        </div>
+    </div>
+
+    <div class="admin-overlay" id="adminOverlay">
+        <div class="admin-box">
+            <div style="font-family:'Orbitron',monospace;color:#00c8ff;font-size:14px;margin-bottom:8px;">Admin Girişi</div>
+            <input type="password" class="admin-input" id="adminInput" placeholder="••••••••" maxlength="20" onkeydown="if(event.key==='Enter') checkAdmin()" />
+            <div class="admin-error-msg" id="adminError"></div>
+            <button class="admin-btn" onclick="checkAdmin()">GİRİŞ</button>
+            <div class="admin-cancel" onclick="closeAdmin()">LƏĞV ET</div>
+        </div>
+    </div>
+
+<script>
+const { ipcRenderer } = require('electron');
+const ADMIN_PASS = 'elianor9060';
+let lastClickTime = 0;
+
+function updateDateTime() {
+    const now = new Date();
+    const days = ['Bazar','Bazar ertəsi','Çərşənbə axşamı','Çərşənbə','Cümə axşamı','Cümə','Şənbə'];
+    document.getElementById('statusDate').textContent = `${days[now.getDay()]} | ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')} | ${String(now.getDate()).padStart(2,'0')}.${String(now.getMonth()+1).padStart(2,'0')}.${now.getFullYear()}`;
+}
+setInterval(updateDateTime, 1000);
+updateDateTime();
+
+// 🚀 RENDERING GECİKMƏSİNİ VƏ BOŞLUĞU APARAN MƏCBURİ SKRİPT SƏTRİ
+window.addEventListener('DOMContentLoaded', () => {
+    document.body.style.height = '100vh';
+    document.documentElement.style.height = '100vh';
+});
+
+function launchKioskApp(path, name) {
+    const currentTime = Date.now();
+    if (currentTime - lastClickTime < 800) return;
+    lastClickTime = currentTime;
+
+    ipcRenderer.send('open-app', path);
+    
+    if(name === 'Kassa 1') document.getElementById('tabKassa1').style.display = 'flex';
+    if(name === 'Kassa 2') document.getElementById('tabKassa2').style.display = 'flex';
+    if(name === 'AnyDesk') document.getElementById('tabAnyDesk').style.display = 'flex';
+}
+
+function recallApp(path) {
+    const currentTime = Date.now();
+    if (currentTime - lastClickTime < 800) return;
+    lastClickTime = currentTime;
+    
+    // 🚀 Kassa 2 tabına basanda birbaşa open-app kanalına siqnal ötürürük ki, pəncərəni .show() etsin
+    if (path === 'Kassa 2') {
+        ipcRenderer.send('open-app', 'Kassa 2');
+    } else {
+        ipcRenderer.send('open-app', path);
+    }
+}
+
+function closeAppFromTab(event, name) {
+    event.stopPropagation();
+    if(name === 'Kassa 2') {
+        ipcRenderer.send('close-specific-app', 'Kassa 2');
+    } else {
+        let exeName = name === 'Kassa 1' ? 'javaw.exe' : 'AnyDesk.exe';
+        ipcRenderer.send('close-specific-app', exeName);
+    }
+}
+
+ipcRenderer.on('kassa2-state', (event, state) => {
+    const tab = document.getElementById('tabKassa2');
+    if (state === 'closed') tab.style.display = 'none';
+    if (state === 'visible' || state === 'minimized') tab.style.display = 'flex';
+});
+
+ipcRenderer.on('app-closed-by-system', (event, exeName) => {
+    if(exeName.toLowerCase().includes('java')) document.getElementById('tabKassa1').style.display = 'none';
+    if(exeName.toLowerCase().includes('anydesk')) document.getElementById('tabAnyDesk').style.display = 'none';
+});
+
+document.addEventListener('keydown', function(e) { if (e.ctrlKey && e.altKey && e.key === 'a') openAdmin(); });
+function openAdmin() { ipcRenderer.send('trigger-admin-panel'); document.getElementById('adminOverlay').classList.add('show'); setTimeout(() => document.getElementById('adminInput').focus(), 100); }
+function closeAdmin() { document.getElementById('adminOverlay').classList.remove('show'); document.getElementById('adminInput').value = ''; document.getElementById('adminError').textContent = ''; ipcRenderer.send('open-app', 'CHECK_FOCUS'); }
+function checkAdmin() { if (document.getElementById('adminInput').value === ADMIN_PASS) { closeAdmin(); ipcRenderer.send('admin-access'); } else { const input = document.getElementById('adminInput'); input.classList.add('error'); document.getElementById('adminError').textContent = 'Şifrə yanlışdır!'; setTimeout(() => { input.classList.remove('error'); input.value = ''; }, 800); } }
+document.addEventListener('contextmenu', e => e.preventDefault());
+</script>
+</body>
+</html>
