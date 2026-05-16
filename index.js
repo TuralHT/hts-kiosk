@@ -81,7 +81,7 @@ function createWindow() {
         y: 0,
         width: width,
         height: height,
-        kiosk: true, 
+        kiosk: true, // Sizin o sabit, dondurmayan orijinal rejiminiz
         fullscreen: true,
         frame: false,
         autoHideMenuBar: true,
@@ -91,10 +91,17 @@ function createWindow() {
         minimizable: false,
         maximizable: false,
         closable: false,
-        type: 'screen-saver',
         
-        // 🚀 TEST ÜÇÜN BU SƏTRİ ƏLAVƏ EDİN (PƏNCƏRƏNİ TAMAMİLƏ GİZLƏDİR):
-        show: false,
+        // 🚀 ANYDESK-İ BLOKLAYAN 'screen-saver' SİLİNDİ! 
+        // Yerində standart 'window' qalır ki, AnyDesk maneəsiz önə gələ bilsin
+        type: 'window', 
+        
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false,
+            webSecurity: false
+        }
+    });
     
     // 🚀 AŞAĞI BOŞLUĞU 'screen-saver' OLMADAN DA 100% SİLƏN RƏSMİ ELECTRON ƏMRİ:
     mainWindow.maximize(); // Pəncərəni Windows rezerv zonalarını tapdalayaraq tam maksimizasiya edir
