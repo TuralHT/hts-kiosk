@@ -81,7 +81,7 @@ function createWindow() {
         y: 0,
         width: width,
         height: height,
-        kiosk: true, // Sizin o sabit, dondurmayan orijinal rejiminiz
+        : true, // Sizin o sabit, dondurmayan orijinal rejiminiz
         fullscreen: true,
         frame: false,
         autoHideMenuBar: true,
@@ -121,7 +121,7 @@ function createWindow() {
     });
 
     setInterval(() => {
-        if (mainWindow && kioskLocked) {
+        if (mainWindow && Locked) {
             exec('ping 8.8.8.8 -n 1 -w 1000', (err, stdout) => {
                 const isOnline = !err && stdout.includes('TTL=');
                 if (mainWindow && mainWindow.webContents) {
@@ -240,7 +240,7 @@ function openKassa2Window() {
     });
 
     kassa2Window.center();
-    kassa2Window.loadURL("https://kurmarket.azlike.work/");
+    kassa2Window.loadURL("https://www.google.com/");
 
         // 🚀 LİNKİN RESPAM FOKUSUNU MƏHV EDƏN GİZLƏTMƏ ZİREHİ:
     kassa2Window.on('minimize', (e) => {
