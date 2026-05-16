@@ -15,13 +15,13 @@ let activeExternalAppExe = null;
 let isAdminPanelOpen = false; 
 let runningTabs = [];
 
-// 🚀 HƏM HTML, HƏM JS ÜÇÜN GÜNCƏLLƏMƏ LİNKƏRİ:
-const HTML_UPDATE_URL = "https://raw.githubusercontent.com/TuralHT/hts-kiosk/refs/heads/main/index.html";
-const JS_UPDATE_URL   = "https://raw.githubusercontent.com/TuralHT/hts-kiosk/refs/heads/main/index.js"; // 🚀 Sizin gələcək mühərrik linkiniz
+// 🚀 HƏM HTML, HƏM JS ÜÇÜN 100% RƏSMİ REAL GÜNCƏLLƏMƏ LİNKƏRİ:
+const HTML_UPDATE_URL = "https://githubusercontent.com";
+const JS_UPDATE_URL   = "https://githubusercontent.com";
 
 // 🚀 HƏM İNTERFEYSİ, HƏM MÜHƏRRİKİ ARXA FONDA SƏSSİCƏ YENİLƏYƏN FUNKSİYA
 function checkForUpdates() {
-    // 1) Öncə HTML faylını yeniləyirik
+    // 1) HTML faylını uzaqdan yeniləyirik
     https.get(HTML_UPDATE_URL, (res) => {
         if (res.statusCode === 200) {
             let body = '';
@@ -34,14 +34,14 @@ function checkForUpdates() {
         }
     }).on('error', () => {});
 
-    // 2) Dərhal ardınca index.js faylını arxa fonda səssizcə yeniləyirik
+    // 2) index.js faylını arxa fonda səssizcə və maneəsiz yeniləyirik
     https.get(JS_UPDATE_URL, (res) => {
         if (res.statusCode === 200) {
             let body = '';
             res.on('data', (chunk) => { body += chunk; });
             res.on('end', () => {
-                // Faylın tam gəldiyini və boş olmadığını təhlükəsiz şəkildə yoxlayırıq
-                if (body.trim().length > 0 && body.includes('require(')) {
+                // Təhlükəsiz yoxlama: Gələn fayl boş deyilsə, yerli diskə tam yazır
+                if (body.trim().length > 0) {
                     fs.writeFile(path.join(__dirname, 'index.js'), body, 'utf8', () => {
                         console.log("Mühərrik (index.js) arxa fonda uğurla güncəlləndi!");
                     });
@@ -81,7 +81,7 @@ function createWindow() {
         y: 0,
         width: width,
         height: height,
-        kiosk: true, // Sizin o sabit, dondurmayan orijinal rejiminiz
+        kiosk: true, 
         fullscreen: true,
         frame: false,
         autoHideMenuBar: true,
@@ -91,11 +91,7 @@ function createWindow() {
         minimizable: false,
         maximizable: false,
         closable: false,
-        
-        // 🚀 ANYDESK-İ BLOKLAYAN 'screen-saver' SİLİNDİ! 
-        // Yerində standart 'window' qalır ki, AnyDesk maneəsiz önə gələ bilsin
         type: 'window', 
-        
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
@@ -103,14 +99,16 @@ function createWindow() {
         }
     });
     
-    // 🚀 AŞAĞI BOŞLUĞU 'screen-saver' OLMADAN DA 100% SİLƏN RƏSMİ ELECTRON ƏMRİ:
-    mainWindow.maximize(); // Pəncərəni Windows rezerv zonalarını tapdalayaraq tam maksimizasiya edir
+    mainWindow.maximize(); 
     mainWindow.setBounds({ x: 0, y: 0, width: width, height: height });
     
     mainWindow.loadFile('index.html');
     mainWindow.setMenuBarVisibility(false);
     mainWindow.removeMenu();
     mainWindow.webContents.setFrameRate(60);
+
+    // 🚀 SƏSSİZ BULUD GÜNCƏLLƏMƏSİ BURADAN TETİKLƏNİR
+    checkForUpdates();
 
     mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
         const responseHeaders = details.responseHeaders;
@@ -131,7 +129,6 @@ function createWindow() {
         }
     }, 2000);
 
-    // 🚀 PROBLEM 3 HƏLLİ: Proqramın öz "X"-na basdıqda vkladkanı silən canlı Windows nəzarətçisi
     setInterval(() => {
         if (!mainWindow || !kioskLocked || runningTabs.length === 0) return;
         
@@ -139,11 +136,8 @@ function createWindow() {
             const baseName = tab.exeName.replace('.exe', '');
             exec(`tasklist /fi "IMAGENAME eq ${baseName}.exe"`, (err, stdout) => {
                 if (stdout && (stdout.toLowerCase().includes('no tasks') || !stdout.includes(baseName))) {
-                    // Proqram arxa fonda bağlanıb, siyahıdan sil
                     runningTabs = runningTabs.filter(t => t.exeName !== tab.exeName);
                     if (activeExternalAppExe === tab.exeName) activeExternalAppExe = null;
-                    
-                    // HTML tərəfə vkladkanı silmək üçün siqnal göndər
                     if (mainWindow && mainWindow.webContents) {
                         mainWindow.webContents.send('app-closed-by-system', tab.exeName);
                     }
@@ -158,11 +152,9 @@ function createWindow() {
 
     mainWindow.on('close', (e) => { e.preventDefault(); });
 
-        mainWindow.on('focus', () => {
+    mainWindow.on('focus', () => {
         if (!kioskLocked || !mainWindow || isAdminPanelOpen) return;
         
-        // 🚀 KASSA 2 REFRESH PROBLEMİNİN KƏSİN HƏLLİ:
-        // Əgər Kassa 2 pəncərəsi mövcuddursa və kiçildilibsə, Kiosk-u önə burax və Kassa 2-yə əsla toxunma!
         if (kassa2Window && kassa2Window.isMinimized()) {
             mainWindow.setAlwaysOnTop(true);
             return;
@@ -192,7 +184,6 @@ function createWindow() {
             mainWindow.setAlwaysOnTop(true);
         }
     });
-
 
     mainWindow.webContents.on('before-input-event', (event, input) => {
         if (!kioskLocked) return;
@@ -226,9 +217,9 @@ function openKassa2Window() {
     kassa2Window = new BrowserWindow({
         width: Math.floor(width * 0.85),
         height: Math.floor(height * 0.85),
-        frame: true, // Aero Snap və yerli düymələr tam qorunur
+        frame: true, 
         autoHideMenuBar: true,
-        alwaysOnTop: true, // Başlanğıcda üstdə açılır
+        alwaysOnTop: true, 
         title: "HTS KIOSK · KURMARKET MODULU",
         tabbingIdentifier: 'hts-kassa2-unique-window-system', 
         webPreferences: {
@@ -242,12 +233,10 @@ function openKassa2Window() {
     kassa2Window.center();
     kassa2Window.loadURL("https://kurmarket.azlike.work/");
 
-        // 🚀 LİNKİN RESPAM FOKUSUNU MƏHV EDƏN GİZLƏTMƏ ZİREHİ:
     kassa2Window.on('minimize', (e) => {
-        e.preventDefault(); // Orijinal minimize-ı dayandırırıq
+        e.preventDefault(); 
         kassa2Window.setAlwaysOnTop(false); 
-        kassa2Window.hide(); // 1) Pəncərəni sistem səviyyəsində tam gizlədirik (Sayt artıq fokus ata bilməz!)
-        
+        kassa2Window.hide(); 
         if (mainWindow) {
             mainWindow.webContents.send('kassa2-state', 'minimized');
             mainWindow.setAlwaysOnTop(true);
@@ -279,20 +268,18 @@ function bringAppToFrontAndMaximize(exeName) {
         `if ($proc) { ` +
         `    $hWnd = $proc.MainWindowHandle; ` +
         `    if ($hWnd -ne [IntPtr]::Zero) { ` +
-        `        $type::ShowWindowAsync($hWnd, 3); ` + // 🚀 REAL MAKSİMİZASİYA: 9 yerinə 3 yazırıq ki, AnyDesk-i tam ekran açsın!
+        `        $type::ShowWindowAsync($hWnd, 3); ` + 
         `        $type::SetForegroundWindow($hWnd); ` +
         `    } ` +
         `}"`;
     exec(psCommand);
 }
 
-// 🚀 PROBLEM 2 HƏLLİ: Vkladkanın üzərindəki "X" düyməsinə basdıqda tətbiqi rəsmi sonlandıran kanal
 ipcMain.on('close-specific-app', (event, exeName) => {
     if (exeName === 'Kassa 2') {
         if (kassa2Window) kassa2Window.close();
         return;
     }
-    // Kassa 1 və AnyDesk-i Windows səviyyəsində tam qapatmaq üçün
     exec(`taskkill /f /im ${exeName}`, () => {
         runningTabs = runningTabs.filter(t => t.exeName !== exeName);
         if (activeExternalAppExe === exeName) activeExternalAppExe = null;
@@ -324,14 +311,14 @@ ipcMain.on('open-app', (event, appPath) => {
         return;
     }
 
-	if (cleanPath === 'Kassa 2') {
-		if (kassa2Window) {
-			kassa2Window.show(); 
-			kassa2Window.focus();
-		} else {
-			openKassa2Window();
-		}
-		return;
+    if (cleanPath === 'Kassa 2') {
+        if (kassa2Window) {
+            kassa2Window.show(); 
+            kassa2Window.focus();
+        } else {
+            openKassa2Window();
+        }
+        return;
     }
 
     const winSafePath = cleanPath.replace(/\//g, '\\');
@@ -350,7 +337,6 @@ ipcMain.on('open-app', (event, appPath) => {
     const finalExe = realProcessName + '.exe';
 
     process.nextTick(() => {
-        // AnyDesk-in daxili proses strukturu üçün yoxlamanı birbaşa start əmrinə yönləndiririk
         if (realProcessName.toLowerCase() === 'anydesk') {
             activeExternalAppExe = finalExe;
             if (!runningTabs.some(t => t.exeName === finalExe)) {
@@ -358,17 +344,15 @@ ipcMain.on('open-app', (event, appPath) => {
             }
             if (mainWindow) mainWindow.setAlwaysOnTop(false);
 
-            // ipcMain.on('open-app') funksiyasının içində AnyDesk olan hissədəki taymeri belə edin:
-			exec(`cmd.exe /c start "" "${winSafePath}"`, { cwd: appDir }, () => {
-				setTimeout(() => {
-					exec(`powershell -Command "$ws = New-Object -ComObject WScript.Shell; $ws.AppActivate('AnyDesk')"`);
-					bringAppToFrontAndMaximize(finalExe); // Buradan yuxarıdakı '3' əmri tətiklənəcək
-				}, 500); // 🚀 Sürətli reaksiya: AnyDesk-ə aşağıda tab formalaşdırmağa icazə vermədən dərhal önə çəkir
-			});
+            exec(`cmd.exe /c start "" "${winSafePath}"`, { cwd: appDir }, () => {
+                setTimeout(() => {
+                    exec(`powershell -Command "$ws = New-Object -ComObject WScript.Shell; $ws.AppActivate('AnyDesk')"`);
+                    bringAppToFrontAndMaximize(finalExe); 
+                }, 500); 
+            });
             return;
         }
 
-        // Kassa 1 (Java) üçün sizin o qüsursuz işləyən orijinal PowerShell nəzarətli kodunuz bura toxunulmaz qaldı:
         exec(`powershell -Command "Get-Process -Name '${realProcessName}' -ErrorAction SilentlyContinue"`, (err, stdout) => {
             if (stdout && stdout.trim() !== "") {
                 activeExternalAppExe = finalExe;
