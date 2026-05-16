@@ -81,7 +81,7 @@ function createWindow() {
         y: 0,
         width: width,
         height: height,
-        : true, // Sizin o sabit, dondurmayan orijinal rejiminiz
+        kiosk: true, // Sizin o sabit, dondurmayan orijinal rejiminiz
         fullscreen: true,
         frame: false,
         autoHideMenuBar: true,
@@ -121,7 +121,7 @@ function createWindow() {
     });
 
     setInterval(() => {
-        if (mainWindow && Locked) {
+        if (mainWindow && kioskLocked) {
             exec('ping 8.8.8.8 -n 1 -w 1000', (err, stdout) => {
                 const isOnline = !err && stdout.includes('TTL=');
                 if (mainWindow && mainWindow.webContents) {
@@ -229,7 +229,7 @@ function openKassa2Window() {
         frame: true, // Aero Snap və yerli düymələr tam qorunur
         autoHideMenuBar: true,
         alwaysOnTop: true, // Başlanğıcda üstdə açılır
-        title: "GUNCELLEME 100% UGURLUDUR",
+        title: "HTS KIOSK · KURMARKET MODULU",
         tabbingIdentifier: 'hts-kassa2-unique-window-system', 
         webPreferences: {
             nodeIntegration: false,
@@ -240,7 +240,7 @@ function openKassa2Window() {
     });
 
     kassa2Window.center();
-    kassa2Window.loadURL("https://www.google.com/");
+    kassa2Window.loadURL("https://kurmarket.azlike.work/");
 
         // 🚀 LİNKİN RESPAM FOKUSUNU MƏHV EDƏN GİZLƏTMƏ ZİREHİ:
     kassa2Window.on('minimize', (e) => {
